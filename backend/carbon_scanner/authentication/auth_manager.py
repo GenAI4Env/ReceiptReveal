@@ -7,7 +7,7 @@ import os
 import re
 import base64
 from datetime import datetime
-from carbon_scanner.database.db_manager import DatabaseManager
+from carbon_scanner.database import DatabaseManager
 
 
 class User(UserMixin):
