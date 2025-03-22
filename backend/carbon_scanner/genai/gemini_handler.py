@@ -1,12 +1,11 @@
-from dotenv import load_dotenv
 import os
 from google import genai
 from google.genai import types
 from PIL import Image, ImageFile
+from carbon_scanner.config import config
 
-load_dotenv()
-
-client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+assert config.GEMINI_API_KEY, "GEMINI_API_KEY is not set in the environment variables."
+client = genai.Client(api_key=config.GEMINI_API_KEY)
 
 
 def image_resp(prompt: str, image: ImageFile) -> str:
@@ -14,7 +13,7 @@ def image_resp(prompt: str, image: ImageFile) -> str:
     Generates a model response based on a prompt and an image.
     """
     # Read image bytes
-    image_bytes = image.fp.read()
+    image_bytes = image.read()
 
     response = client.models.generate_content(
         model="gemini-2.0-pro-exp-02-05",
@@ -30,11 +29,9 @@ def text_resp(prompt: str) -> str:
     """
     Generates a model response based on a text prompt.
     """
-    response = client.models.generate_text(
+    response = client.models.generate_content(
         model="gemini-2.0-pro-exp-02-05",
-        prompt=prompt,
-        temperature=0.5,
-        max_output_tokens=100,
+        contents=prompt,
     )
     return response.text
 
