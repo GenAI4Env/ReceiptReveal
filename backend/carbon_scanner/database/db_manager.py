@@ -24,7 +24,6 @@ class DatabaseManager:
             """
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE,
                 password TEXT,
                 email TEXT UNIQUE,
                 password_hash TEXT,
@@ -47,18 +46,6 @@ class DatabaseManager:
         """
         )
         await self.conn.commit()
-
-    async def add_user(self, username: str, password: str):
-        await self.conn.execute(
-            "INSERT INTO users (username, password) VALUES (?, ?)", (username, password)
-        )
-        await self.conn.commit()
-
-    async def get_user(self, username: str):
-        cursor = await self.conn.execute(
-            "SELECT id, username, password FROM users WHERE username = ?", (username,)
-        )
-        return await cursor.fetchone()
 
     async def get_user_by_email(self, email: str):
         cursor = await self.conn.execute(
