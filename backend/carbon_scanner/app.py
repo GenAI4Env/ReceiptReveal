@@ -4,6 +4,7 @@ from carbon_scanner.genai.gemini_handler import text_resp, image_resp
 from carbon_scanner.database.db_manager import DatabaseManager
 from PIL import Image
 from carbon_scanner.config import config
+from carbon_scanner.images import ImageUploader
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = config.SECRET_KEY
@@ -73,6 +74,23 @@ async def get_prompts():
     async with DatabaseManager() as db:
         prompts = await db.get_prompts_for_user(user_id)
     return jsonify(prompts)
+
+
+@app.route("/images/upload", methods=["POST"])
+async def upload_image():
+    """Endpoint to upload an image."""
+    file = request.files.get("image")
+    if not file:
+        return jsonify({"error": "No image provided"}), 400
+    return (
+        jsonify(
+            {
+                "message": "Image uploaded successfully",
+                "url": ImageUploader.upload_image(file),
+            }
+        ),
+        201,
+    )
 
 
 def main():
