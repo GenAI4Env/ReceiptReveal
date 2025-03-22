@@ -10,5 +10,9 @@ class Config:
     def GEMINI_API_KEY(self) -> str:
         return os.getenv("GEMINI_API_KEY", "")
 
+    @property
+    def DATABASE_URL(self) -> str:
+        return os.getenv("DATABASE_URL", "file:/tmp/carbon_scanner.db")
+
 
 config = Config()
