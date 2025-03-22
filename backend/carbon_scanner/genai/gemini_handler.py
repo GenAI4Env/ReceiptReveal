@@ -4,7 +4,7 @@ from google.genai import types
 from PIL import Image, ImageFile
 from carbon_scanner.config import config
 
-
+assert config.GEMINI_API_KEY, "GEMINI_API_KEY is not set in the environment variables."
 client = genai.Client(api_key=config.GEMINI_API_KEY)
 
 
