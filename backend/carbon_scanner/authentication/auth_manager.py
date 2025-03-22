@@ -20,19 +20,19 @@ class User(UserMixin):
         self.profile = kwargs.get("profile", {})
 
     @staticmethod
-    def hash_password(password: str, salt: Optional[str] = None) -> tuple[str, str]:
+    def hash_password(password: str) -> tuple[str, str]:
         """Hash a password with a salt."""
-        if not salt:
-            salt = os.urandom(32).hex()
-        hashed = hashlib.pbkdf2_hmac(
-            "sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000
-        ).hex()
-        return hashed, salt
+        salt = os.urandom(16)
+        hashed_pw = hashlib.sha256(salt + password.encode("utf-8")).hexdigest()
+        return hashed_pw, salt.hex()
 
     @staticmethod
-    def verify_password(password: str, hashed: str, salt: str) -> bool:
+    def verify_password(password: str, salt: str, hashed_pw: str) -> bool:
         """Verify a password against a hash and salt."""
-        return User.hash_password(password, salt)[0] == hashed
+        test_hash = hashlib.sha256(
+            bytes.fromhex(salt) + password.encode("utf-8")
+        ).hexdigest()
+        return test_hash == hashed_pw
 
 
 class AuthManager:
@@ -52,23 +52,23 @@ class AuthManager:
         @self.login_manager.user_loader
         async def load_user(user_id: str) -> Optional[User]:
             """Load a user from the database by ID."""
-            # This would typically query from your database
-            # For demonstration, using a simple approach
             db = current_app.extensions.get("db")
             if not db:
                 return None
-
             try:
-                # Assuming db has an async get_user method
-                user_data = await db.get_user(user_id)
-                if user_data:
+                # Implement a database call to retrieve user by their ID:
+                user_data = await db.conn.execute(
+                    "SELECT id, email, is_active, created_at, last_login FROM users WHERE id = ?",
+                    (user_id,),
+                )
+                user_row = await user_data.fetchone()
+                if user_row:
                     return User(
-                        user_id=user_data["id"],
-                        email=user_data["email"],
-                        is_active=user_data.get("is_active", True),
-                        created_at=user_data.get("created_at"),
-                        last_login=user_data.get("last_login"),
-                        profile=user_data.get("profile", {}),
+                        user_id=str(user_row[0]),
+                        email=user_row[1],
+                        is_active=(user_row[2] == 1),
+                        created_at=user_row[3],
+                        last_login=user_row[4],
                     )
                 return None
             except Exception as e:
