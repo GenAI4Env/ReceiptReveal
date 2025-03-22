@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { dbService } from '../services/dbService';
 
 const AuthContext = createContext(null);
@@ -6,25 +6,30 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
 
-  // Check for existing session on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    // Check for existing user session
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      setUser(userData);
       setIsLoggedIn(true);
     }
   }, []);
 
   const login = async (username, password) => {
     try {
-      setError(null);
       const userData = await dbService.verifyUser(username, password);
-      setIsLoggedIn(true);
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      return true;
+      if (userData) {
+        setUser(userData);
+        setIsLoggedIn(true);
+        localStorage.setItem('user', JSON.stringify(userData));
+        setError('');
+        return true;
+      }
+      setError('Invalid username or password');
+      return false;
     } catch (err) {
       setError(err.message);
       return false;
@@ -32,21 +37,24 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    setIsLoggedIn(false);
     setUser(null);
-    setError(null);
+    setIsLoggedIn(false);
     localStorage.removeItem('user');
+    setError('');
   };
 
   const signup = async (username, password) => {
     try {
-      setError(null);
       const userData = await dbService.addUser(username, password);
-      // After successful signup, log the user in
-      setIsLoggedIn(true);
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      return true;
+      if (userData) {
+        setUser(userData);
+        setIsLoggedIn(true);
+        localStorage.setItem('user', JSON.stringify(userData));
+        setError('');
+        return true;
+      }
+      setError('Username already exists');
+      return false;
     } catch (err) {
       setError(err.message);
       return false;

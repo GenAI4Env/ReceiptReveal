@@ -7,6 +7,7 @@ import leafIcon from './assets/leaf.png';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
 import { useAuth } from './context/AuthContext';
+import Profile from './components/Profile';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -14,6 +15,7 @@ function App() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [showSignUp, setShowSignUp] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const { isLoggedIn, logout } = useAuth();
 
   const handleSend = () => {
@@ -66,6 +68,10 @@ function App() {
     return <Login onBack={() => setShowLogin(false)} />;
   }
 
+  if (showProfile) {
+    return <Profile onBack={() => setShowProfile(false)} />;
+  }
+
   return (
     <div className="app">
       <header className="header">
@@ -76,7 +82,7 @@ function App() {
         <div className="header-right">
           {isLoggedIn ? (
             <>
-              <button className="auth-button">Profile</button>
+              <button className="auth-button" onClick={() => setShowProfile(true)}>Profile</button>
               <button className="auth-button" onClick={logout}>Log Out</button>
             </>
           ) : (
