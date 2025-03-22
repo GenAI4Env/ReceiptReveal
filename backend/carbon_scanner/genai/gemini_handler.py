@@ -29,11 +29,9 @@ def text_resp(prompt: str) -> str:
     """
     Generates a model response based on a text prompt.
     """
-    response = client.models.generate_text(
+    response = client.models.generate_content(
         model="gemini-2.0-pro-exp-02-05",
-        prompt=prompt,
-        temperature=0.5,
-        max_output_tokens=100,
+        contents=prompt,
     )
     return response.text
 
