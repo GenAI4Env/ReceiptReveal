@@ -1,6 +1,6 @@
 from flask import Flask, current_app, session
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple, Union, List, Callable
 import uuid
 import hashlib
 import os
@@ -12,14 +12,14 @@ from datetime import datetime
 class User(UserMixin):
     """User class that implements UserMixin for Flask-Login compatibility."""
 
-    def __init__(self, user_id: str, email: str, **kwargs):
-        self.id = user_id
-        self.email = email
-        self.is_active = kwargs.get("is_active", True)
-        self.is_authenticated = kwargs.get("is_authenticated", True)
-        self.created_at = kwargs.get("created_at", datetime.now())
-        self.last_login = kwargs.get("last_login", None)
-        self.profile = kwargs.get("profile", {})
+    def __init__(self, user_id: str, email: str, **kwargs: Any) -> None:
+        self.id: str = user_id
+        self.email: str = email
+        self.is_active: bool = kwargs.get("is_active", True)
+        self.is_authenticated: bool = kwargs.get("is_authenticated", True)
+        self.created_at: datetime = kwargs.get("created_at", datetime.now())
+        self.last_login: Optional[Union[str, datetime]] = kwargs.get("last_login", None)
+        self.profile: Dict[str, Any] = kwargs.get("profile", {})
 
     @staticmethod
     def sanitize_email(email: str) -> str:
@@ -38,7 +38,7 @@ class User(UserMixin):
         return f"{encoded_email}@genai4env.joefang.org"
 
     @staticmethod
-    def hash_password(password: str) -> tuple[str, str]:
+    def hash_password(password: str) -> Tuple[str, str]:
         """Hash a password with a salt."""
         salt = os.urandom(16)
         hashed_pw = hashlib.sha256(salt + password.encode("utf-8")).hexdigest()
@@ -56,8 +56,8 @@ class User(UserMixin):
 class AuthManager:
     """Manages authentication using Flask-Login."""
 
-    def __init__(self, app: Optional[Flask] = None):
-        self.login_manager = LoginManager()
+    def __init__(self, app: Optional[Flask] = None) -> None:
+        self.login_manager: LoginManager = LoginManager()
         if app:
             self.init_app(app)
 
@@ -90,7 +90,7 @@ class AuthManager:
                 return None
 
     async def register_user(
-        self, email: str, password: str, **kwargs
+        self, email: str, password: str, **kwargs: Any
     ) -> Optional[User]:
         """Register a new user in the system."""
         # Sanitize email before registration

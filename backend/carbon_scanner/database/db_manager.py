@@ -1,25 +1,26 @@
 import aiosqlite
 from carbon_scanner.config import config
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List, Tuple, Union
 
 DATABASE_URL = config.DATABASE_URL
 
 
 class DatabaseManager:
-    def __init__(self, db_url=DATABASE_URL):
-        self.db_url = db_url
-        self.conn = None
+    def __init__(self, db_url: str = DATABASE_URL) -> None:
+        self.db_url: str = db_url
+        self.conn: Optional[aiosqlite.Connection] = None
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "DatabaseManager":
         self.conn = await aiosqlite.connect(self.db_url)
         await self._initialize_tables()
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.conn.close()
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        if self.conn:
+            await self.conn.close()
 
-    async def _initialize_tables(self):
+    async def _initialize_tables(self) -> None:
         # Create a simple users table and prompts table for storing context
         await self.conn.execute(
             """
@@ -90,7 +91,7 @@ class DatabaseManager:
             "last_login": row[6],
         }
 
-    async def create_user(self, user_data: dict):
+    async def create_user(self, user_data: Dict[str, Any]) -> None:
         await self.conn.execute(
             "INSERT INTO users (id, email, password_hash, password_salt, created_at, is_active) VALUES (?, ?, ?, ?, ?, ?)",
             (
@@ -104,7 +105,7 @@ class DatabaseManager:
         )
         await self.conn.commit()
 
-    async def update_user_login(self, user_id: str):
+    async def update_user_login(self, user_id: str) -> None:
         await self.conn.execute(
             "UPDATE users SET last_login = ? WHERE id = ?",
             (datetime.now().isoformat(), user_id),
@@ -112,15 +113,15 @@ class DatabaseManager:
         await self.conn.commit()
 
     async def store_prompt_context(
-        self, user_id: int, prompt: str, context: str = None
-    ):
+        self, user_id: int, prompt: str, context: Optional[str] = None
+    ) -> None:
         await self.conn.execute(
             "INSERT INTO prompts (user_id, prompt, context) VALUES (?, ?, ?)",
             (user_id, prompt, context),
         )
         await self.conn.commit()
 
-    async def get_prompts_for_user(self, user_id: int):
+    async def get_prompts_for_user(self, user_id: int) -> List[Tuple[int, str, str]]:
         cursor = await self.conn.execute(
             "SELECT id, prompt, context FROM prompts WHERE user_id = ?", (user_id,)
         )
