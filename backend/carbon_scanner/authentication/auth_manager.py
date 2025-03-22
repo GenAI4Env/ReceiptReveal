@@ -74,19 +74,15 @@ class AuthManager:
             if not db:
                 return None
             try:
-                # Implement a database call to retrieve user by their ID:
-                user_data = await db.conn.execute(
-                    "SELECT id, email, is_active, created_at, last_login FROM users WHERE id = ?",
-                    (user_id,),
-                )
-                user_row = await user_data.fetchone()
-                if user_row:
+                # Use the db_manager method instead of direct SQL
+                user_data = await db.get_user_by_id(user_id)
+                if user_data:
                     return User(
-                        user_id=str(user_row[0]),
-                        email=user_row[1],
-                        is_active=(user_row[2] == 1),
-                        created_at=user_row[3],
-                        last_login=user_row[4],
+                        user_id=str(user_data["id"]),
+                        email=user_data["email"],
+                        is_active=user_data["is_active"],
+                        created_at=user_data["created_at"],
+                        last_login=user_data["last_login"],
                     )
                 return None
             except Exception as e:

@@ -1,6 +1,7 @@
 import aiosqlite
 from carbon_scanner.config import config
 from datetime import datetime
+from typing import Optional, Dict, Any
 
 DATABASE_URL = config.DATABASE_URL
 
@@ -47,12 +48,47 @@ class DatabaseManager:
         )
         await self.conn.commit()
 
-    async def get_user_by_email(self, email: str):
+    async def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """Get a user by their ID."""
+        cursor = await self.conn.execute(
+            "SELECT id, email, password_hash, password_salt, created_at, is_active, last_login FROM users WHERE id = ?",
+            (user_id,),
+        )
+        row = await cursor.fetchone()
+        if not row:
+            return None
+
+        # Convert row to dictionary
+        return {
+            "id": row[0],
+            "email": row[1],
+            "password_hash": row[2],
+            "password_salt": row[3],
+            "created_at": row[4],
+            "is_active": bool(row[5]),
+            "last_login": row[6],
+        }
+
+    async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        """Get a user by their email."""
         cursor = await self.conn.execute(
             "SELECT id, email, password_hash, password_salt, created_at, is_active, last_login FROM users WHERE email = ?",
             (email,),
         )
-        return await cursor.fetchone()
+        row = await cursor.fetchone()
+        if not row:
+            return None
+
+        # Convert row to dictionary
+        return {
+            "id": row[0],
+            "email": row[1],
+            "password_hash": row[2],
+            "password_salt": row[3],
+            "created_at": row[4],
+            "is_active": bool(row[5]),
+            "last_login": row[6],
+        }
 
     async def create_user(self, user_data: dict):
         await self.conn.execute(
