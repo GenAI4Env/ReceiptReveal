@@ -1,26 +1,45 @@
 from flask import Flask, current_app, session
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple, Union, List, Callable
 import uuid
 import hashlib
 import os
+import re
+import base64
 from datetime import datetime
+from carbon_scanner.database import DatabaseManager
 
 
 class User(UserMixin):
     """User class that implements UserMixin for Flask-Login compatibility."""
 
-    def __init__(self, user_id: str, email: str, **kwargs):
-        self.id = user_id
-        self.email = email
-        self.is_active = kwargs.get("is_active", True)
-        self.is_authenticated = kwargs.get("is_authenticated", True)
-        self.created_at = kwargs.get("created_at", datetime.now())
-        self.last_login = kwargs.get("last_login", None)
-        self.profile = kwargs.get("profile", {})
+    def __init__(self, user_id: str, email: str, **kwargs: Any) -> None:
+        self.id: str = user_id
+        self.email: str = email
+        self.is_active: bool = kwargs.get("is_active", True)
+        self.is_authenticated: bool = kwargs.get("is_authenticated", True)
+        self.created_at: datetime = kwargs.get("created_at", datetime.now())
+        self.last_login: Optional[Union[str, datetime]] = kwargs.get("last_login", None)
+        self.profile: Dict[str, Any] = kwargs.get("profile", {})
 
     @staticmethod
-    def hash_password(password: str) -> tuple[str, str]:
+    def sanitize_email(email: str) -> str:
+        """
+        Validate email or encode it if invalid:
+        1. Check if email is valid with a simple regex
+        2. If invalid, encode the entire string and use it as the local part
+        """
+        # Check if email is already valid with a single regex
+        if re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
+            return email
+
+        # If email is invalid, encode the entire string to ensure it's safe
+        # Use urlsafe base64 encoding (removing padding characters)
+        encoded_email = base64.b32hexencode(email.encode()).decode().lower()
+        return f"{encoded_email}@genai4env.joefang.org"
+
+    @staticmethod
+    def hash_password(password: str) -> Tuple[str, str]:
         """Hash a password with a salt."""
         salt = os.urandom(16)
         hashed_pw = hashlib.sha256(salt + password.encode("utf-8")).hexdigest()
@@ -38,8 +57,8 @@ class User(UserMixin):
 class AuthManager:
     """Manages authentication using Flask-Login."""
 
-    def __init__(self, app: Optional[Flask] = None):
-        self.login_manager = LoginManager()
+    def __init__(self, app: Optional[Flask] = None) -> None:
+        self.login_manager: LoginManager = LoginManager()
         if app:
             self.init_app(app)
 
@@ -52,23 +71,22 @@ class AuthManager:
         @self.login_manager.user_loader
         async def load_user(user_id: str) -> Optional[User]:
             """Load a user from the database by ID."""
-            db = current_app.extensions.get("db")
+            # Get db from Flask extensions
+            db: Optional[DatabaseManager] = current_app.extensions.get("db")
             if not db:
+                current_app.logger.error("Database extension not initialized")
                 return None
+
             try:
-                # Implement a database call to retrieve user by their ID:
-                user_data = await db.conn.execute(
-                    "SELECT id, email, is_active, created_at, last_login FROM users WHERE id = ?",
-                    (user_id,),
-                )
-                user_row = await user_data.fetchone()
-                if user_row:
+                # Use the db_manager method to retrieve user
+                user_data = await db.get_user_by_id(user_id)
+                if user_data:
                     return User(
-                        user_id=str(user_row[0]),
-                        email=user_row[1],
-                        is_active=(user_row[2] == 1),
-                        created_at=user_row[3],
-                        last_login=user_row[4],
+                        user_id=str(user_data["id"]),
+                        email=user_data["email"],
+                        is_active=user_data["is_active"],
+                        created_at=user_data["created_at"],
+                        last_login=user_data["last_login"],
                     )
                 return None
             except Exception as e:
@@ -76,15 +94,18 @@ class AuthManager:
                 return None
 
     async def register_user(
-        self, email: str, password: str, **kwargs
+        self, email: str, password: str, **kwargs: Any
     ) -> Optional[User]:
         """Register a new user in the system."""
+        # Sanitize email before registration
+        sanitized_email = User.sanitize_email(email)
+
         db = current_app.extensions.get("db")
         if not db:
             return None
 
         # Check if user already exists
-        existing_user = await db.get_user_by_email(email)
+        existing_user = await db.get_user_by_email(sanitized_email)
         if existing_user:
             return None
 
@@ -94,7 +115,7 @@ class AuthManager:
 
         user_data = {
             "id": user_id,
-            "email": email,
+            "email": sanitized_email,
             "password_hash": hashed_pw,
             "password_salt": salt,
             "created_at": datetime.now(),
@@ -105,19 +126,22 @@ class AuthManager:
         # Save to database
         try:
             await db.create_user(user_data)
-            return User(user_id=user_id, email=email, **kwargs)
+            return User(user_id=user_id, email=sanitized_email, **kwargs)
         except Exception as e:
             current_app.logger.error(f"Error creating user: {str(e)}")
             return None
 
     async def login(self, email: str, password: str) -> Optional[User]:
         """Log a user in by email and password."""
+        # Sanitize email before login
+        sanitized_email = User.sanitize_email(email)
+
         db = current_app.extensions.get("db")
         if not db:
             return None
 
         # Get user from database
-        user_data = await db.get_user_by_email(email)
+        user_data = await db.get_user_by_email(sanitized_email)
         if not user_data:
             return None
 
@@ -152,6 +176,12 @@ class AuthManager:
 if __name__ == "__main__":
     # Example usage
     app = Flask(__name__)
-    auth_manager = AuthManager(app)
     app.config["SECRET_KEY"] = "your_secret_key"
     app.config["DEBUG"] = True
+
+    # Initialize database extension first
+    db_manager = DatabaseManager()
+    db_manager.init_app(app)
+
+    # Then initialize auth manager
+    auth_manager = AuthManager(app)
