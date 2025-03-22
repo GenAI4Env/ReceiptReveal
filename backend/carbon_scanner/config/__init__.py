@@ -14,5 +14,9 @@ class Config:
     def DATABASE_URL(self) -> str:
         return os.getenv("DATABASE_URL", "file:/tmp/carbon_scanner.db")
 
+    @property
+    def SECRET_KEY(self) -> str:
+        return os.getenv("SECRET_KEY", "L-S5e3_NsEHnix3-g03Go")
+
 
 config = Config()

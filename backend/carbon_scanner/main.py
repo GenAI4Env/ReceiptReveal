@@ -3,9 +3,10 @@ from carbon_scanner.authentication.auth_manager import AuthManager
 from carbon_scanner.genai.gemini_handler import text_resp, image_resp
 from carbon_scanner.database.db_manager import DatabaseManager
 from PIL import Image
+from carbon_scanner.config import config
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "some_secret_key"
+app.config["SECRET_KEY"] = config.SECRET_KEY
 auth_manager = AuthManager(app)
 
 
