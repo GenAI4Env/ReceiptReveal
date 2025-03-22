@@ -517,6 +517,48 @@ files = [
 ]
 
 [[package]]
+name = "docarray"
+version = "0.41.0"
+description = "The data structure for multimodal data"
+optional = false
+python-versions = "<4.0,>=3.8"
+groups = ["main"]
+files = [
+    {file = "docarray-0.41.0-py3-none-any.whl", hash = "sha256:a544ac75f77165b1861d2c19c2993835a635fc2267871c469e1006497a99421d"},
+    {file = "docarray-0.41.0.tar.gz", hash = "sha256:7fb34eed16f25ba90b1425b263553f3735da987bf8433ff844d754b8b2c3ef81"},
+]
+
+[package.dependencies]
+numpy = ">=1.17.3"
+orjson = ">=3.8.2"
+pydantic = ">=1.10.8"
+rich = ">=13.1.0"
+types-requests = ">=2.28.11.6"
+typing-inspect = ">=0.8.0"
+
+[package.extras]
+audio = ["pydub (>=0.25.1,<0.26.0)"]
+aws = ["smart-open[s3] (>=6.3.0)"]
+elasticsearch = ["elastic-transport (>=8.4.0,<9.0.0)", "elasticsearch (>=7.10.1)"]
+epsilla = ["pyepsilla (>=0.2.3)"]
+full = ["av (>=10.0.0)", "jax (>=0.4.10)", "lz4 (>=1.0.0)", "pandas (>=1.1.0)", "pillow (>=9.3.0)", "protobuf (>=3.20.0)", "pydub (>=0.25.1,<0.26.0)", "trimesh[easy] (>=3.17.1)", "types-pillow (>=9.3.0.1)"]
+hnswlib = ["hnswlib (>=0.7.0)", "protobuf (>=3.20.0)"]
+image = ["pillow (>=9.3.0)", "types-pillow (>=9.3.0.1)"]
+jac = ["jina-hubble-sdk (>=0.34.0)"]
+jax = ["jax (>=0.4.10)"]
+mesh = ["trimesh[easy] (>=3.17.1)"]
+milvus = ["pymilvus (>=2.2.12,<3.0.0)"]
+mongo = ["pymongo (>=4.6.2)"]
+pandas = ["pandas (>=1.1.0)"]
+proto = ["lz4 (>=1.0.0)", "protobuf (>=3.20.0)"]
+qdrant = ["qdrant-client (>=1.4.0) ; python_version < \"3.12\""]
+redis = ["redis (>=4.6.0,<5.0.0)"]
+torch = ["torch (>=1.0.0)"]
+video = ["av (>=10.0.0)"]
+weaviate = ["weaviate-client (>=3.17,<3.18)"]
+web = ["fastapi (>=0.100.0)"]
+
+[[package]]
 name = "fastavro"
 version = "1.10.0"
 description = "Fast read/write of AVRO files"
@@ -1549,6 +1591,31 @@ otel = ["opentelemetry-api (>=1.30.0,<2.0.0)", "opentelemetry-exporter-otlp-prot
 pytest = ["pytest (>=7.0.0)", "rich (>=13.9.4,<14.0.0)"]
 
 [[package]]
+name = "markdown-it-py"
+version = "3.0.0"
+description = "Python port of markdown-it. Markdown parsing, done right!"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "markdown-it-py-3.0.0.tar.gz", hash = "sha256:e3f60a94fa066dc52ec76661e37c851cb232d92f9886b15cb560aaada2df8feb"},
+    {file = "markdown_it_py-3.0.0-py3-none-any.whl", hash = "sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1"},
+]
+
+[package.dependencies]
+mdurl = ">=0.1,<1.0"
+
+[package.extras]
+benchmarking = ["psutil", "pytest", "pytest-benchmark"]
+code-style = ["pre-commit (>=3.0,<4.0)"]
+compare = ["commonmark (>=0.9,<1.0)", "markdown (>=3.4,<4.0)", "mistletoe (>=1.0,<2.0)", "mistune (>=2.0,<3.0)", "panflute (>=2.3,<3.0)"]
+linkify = ["linkify-it-py (>=1,<3)"]
+plugins = ["mdit-py-plugins"]
+profiling = ["gprof2dot"]
+rtd = ["jupyter_sphinx", "mdit-py-plugins", "myst-parser", "pyyaml", "sphinx", "sphinx-copybutton", "sphinx-design", "sphinx_book_theme"]
+testing = ["coverage", "pytest", "pytest-cov", "pytest-regressions"]
+
+[[package]]
 name = "markupsafe"
 version = "3.0.2"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -1638,6 +1705,18 @@ packaging = ">=17.0"
 dev = ["marshmallow[tests]", "pre-commit (>=3.5,<5.0)", "tox"]
 docs = ["autodocsumm (==0.2.14)", "furo (==2024.8.6)", "sphinx (==8.1.3)", "sphinx-copybutton (==0.5.2)", "sphinx-issues (==5.0.0)", "sphinxext-opengraph (==0.9.1)"]
 tests = ["pytest", "simplejson"]
+
+[[package]]
+name = "mdurl"
+version = "0.1.2"
+description = "Markdown URL utilities"
+optional = false
+python-versions = ">=3.7"
+groups = ["main"]
+files = [
+    {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
+    {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
+]
 
 [[package]]
 name = "multidict"
@@ -1852,7 +1931,6 @@ description = "Fast, correct Python JSON library supporting dataclasses, datetim
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
-markers = "platform_python_implementation != \"PyPy\""
 files = [
     {file = "orjson-3.10.15-cp310-cp310-macosx_10_15_x86_64.macosx_11_0_arm64.macosx_10_15_universal2.whl", hash = "sha256:552c883d03ad185f720d0c09583ebde257e41b9521b74ff40e08b7dec4559c04"},
     {file = "orjson-3.10.15-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:616e3e8d438d02e4854f70bfdc03a6bcdb697358dbaa6bcd19cbe24d24ece1f8"},
@@ -2379,6 +2457,21 @@ toml = ["tomli (>=2.0.1)"]
 yaml = ["pyyaml (>=6.0.1)"]
 
 [[package]]
+name = "pygments"
+version = "2.19.1"
+description = "Pygments is a syntax highlighting package written in Python."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "pygments-2.19.1-py3-none-any.whl", hash = "sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c"},
+    {file = "pygments-2.19.1.tar.gz", hash = "sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f"},
+]
+
+[package.extras]
+windows-terminal = ["colorama (>=0.4.6)"]
+
+[[package]]
 name = "pyparsing"
 version = "3.2.1"
 description = "pyparsing module - Classes and methods to define and execute parsing grammars"
@@ -2507,6 +2600,25 @@ files = [
 
 [package.dependencies]
 requests = ">=2.0.1,<3.0.0"
+
+[[package]]
+name = "rich"
+version = "13.9.4"
+description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
+optional = false
+python-versions = ">=3.8.0"
+groups = ["main"]
+files = [
+    {file = "rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90"},
+    {file = "rich-13.9.4.tar.gz", hash = "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098"},
+]
+
+[package.dependencies]
+markdown-it-py = ">=2.2.0"
+pygments = ">=2.13.0,<3.0.0"
+
+[package.extras]
+jupyter = ["ipywidgets (>=7.5.1,<9)"]
 
 [[package]]
 name = "rsa"
@@ -3085,4 +3197,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11,<4.0"
-content-hash = "0a6726ba6b9fc41e9789b8efce3a6a59c25e389a9fc980f21f317c5879b6c87d"
+content-hash = "6e6618c08c215c32d7a033d7b765dac8e0a303cf927f7f674f35d169ad7c0998"
