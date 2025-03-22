@@ -2,7 +2,7 @@ import os
 from google import genai
 from google.genai import types
 from PIL import Image, ImageFile
-from .config import config
+from carbon_scanner.config import config
 
 
 client = genai.Client(api_key=config.GEMINI_API_KEY)
