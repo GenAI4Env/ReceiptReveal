@@ -13,7 +13,7 @@ def image_resp(prompt: str, image: ImageFile) -> str:
     Generates a model response based on a prompt and an image.
     """
     # Read image bytes
-    image_bytes = image.fp.read()
+    image_bytes = image.read()
 
     response = client.models.generate_content(
         model="gemini-2.0-pro-exp-02-05",

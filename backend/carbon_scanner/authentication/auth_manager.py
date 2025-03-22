@@ -147,3 +147,11 @@ class AuthManager:
     def logout(self) -> None:
         """Log the current user out."""
         logout_user()
+
+
+if __name__ == "__main__":
+    # Example usage
+    app = Flask(__name__)
+    auth_manager = AuthManager(app)
+    app.config["SECRET_KEY"] = "your_secret_key"
+    app.config["DEBUG"] = True
