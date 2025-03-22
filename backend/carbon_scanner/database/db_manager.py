@@ -1,5 +1,6 @@
 import aiosqlite
 from carbon_scanner.config import config
+from datetime import datetime
 
 DATABASE_URL = config.DATABASE_URL
 
@@ -23,10 +24,16 @@ class DatabaseManager:
             """
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL
+                username TEXT UNIQUE,
+                password TEXT,
+                email TEXT UNIQUE,
+                password_hash TEXT,
+                password_salt TEXT,
+                created_at TEXT,
+                is_active INTEGER DEFAULT 1,
+                last_login TEXT
             );
-        """
+            """
         )
         await self.conn.execute(
             """
@@ -52,6 +59,34 @@ class DatabaseManager:
             "SELECT id, username, password FROM users WHERE username = ?", (username,)
         )
         return await cursor.fetchone()
+
+    async def get_user_by_email(self, email: str):
+        cursor = await self.conn.execute(
+            "SELECT id, email, password_hash, password_salt, created_at, is_active, last_login FROM users WHERE email = ?",
+            (email,),
+        )
+        return await cursor.fetchone()
+
+    async def create_user(self, user_data: dict):
+        await self.conn.execute(
+            "INSERT INTO users (id, email, password_hash, password_salt, created_at, is_active) VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                user_data["id"],
+                user_data["email"],
+                user_data["password_hash"],
+                user_data["password_salt"],
+                str(user_data["created_at"]),
+                1 if user_data.get("is_active") else 0,
+            ),
+        )
+        await self.conn.commit()
+
+    async def update_user_login(self, user_id: str):
+        await self.conn.execute(
+            "UPDATE users SET last_login = ? WHERE id = ?",
+            (datetime.now().isoformat(), user_id),
+        )
+        await self.conn.commit()
 
     async def store_prompt_context(
         self, user_id: int, prompt: str, context: str = None
