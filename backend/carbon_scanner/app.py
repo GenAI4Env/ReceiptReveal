@@ -77,7 +77,7 @@ async def get_prompts():
 
 
 @app.route("/images/upload", methods=["POST"])
-async def upload_image():
+def upload_image():
     """Endpoint to upload an image."""
     file = request.files.get("image")
     if not file:
