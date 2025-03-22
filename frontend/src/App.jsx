@@ -2,12 +2,18 @@
 import React, { useState } from 'react';
 import './App.css';
 import logo from './assets/RRlogo.png';
+import userIcon from './assets/user.png';
+import leafIcon from './assets/leaf.png';
+import SignUp from './components/SignUp';
+import Login from './components/Login';
 
 function App() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showSignUp, setShowSignUp] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
   const handleSend = () => {
     if (!inputText && !selectedImage) return;
@@ -15,10 +21,32 @@ function App() {
     const newMessage = {
       text: inputText,
       image: selectedImage,
+      isUser: true,
+      timestamp: new Date().toISOString()
     };
-    setMessages([...messages, newMessage]);
+
+    // Add user message
+    setMessages(prev => [...prev, newMessage]);
+
+    // Simulate AI response (you can replace this with actual API call)
+    setTimeout(() => {
+      const aiMessage = {
+        text: "I'm processing your receipt...",
+        isUser: false,
+        timestamp: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, aiMessage]);
+    }, 1000);
+
     setInputText('');
     setSelectedImage(null);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -28,6 +56,14 @@ function App() {
       setSelectedImage(imageUrl);
     }
   };
+
+  if (showSignUp) {
+    return <SignUp onBack={() => setShowSignUp(false)} />;
+  }
+
+  if (showLogin) {
+    return <Login onBack={() => setShowLogin(false)} />;
+  }
 
   return (
     <div className="app">
@@ -44,8 +80,8 @@ function App() {
             </>
           ) : (
             <>
-              <button className="auth-button">Login</button>
-              <button className="auth-button">Sign Up</button>
+              <button className="auth-button" onClick={() => setShowLogin(true)}>Login</button>
+              <button className="auth-button" onClick={() => setShowSignUp(true)}>Sign Up</button>
             </>
           )}
         </div>
@@ -53,9 +89,14 @@ function App() {
       <div className="chat-container">
         <div className="chat-box">
           {messages.map((msg, index) => (
-            <div className="chat-message" key={index}>
-              {msg.text && <p>{msg.text}</p>}
-              {msg.image && <img src={msg.image} alt="uploaded" className="chat-image" />}
+            <div className={`chat-message ${msg.isUser ? 'user-message' : 'ai-message'}`} key={index}>
+              <div className="message-icon">
+                <img src={msg.isUser ? userIcon : leafIcon} alt={msg.isUser ? "User" : "AI"} />
+              </div>
+              <div className="message-content">
+                {msg.text && <p>{msg.text}</p>}
+                {msg.image && <img src={msg.image} alt="uploaded" className="chat-image" />}
+              </div>
             </div>
           ))}
         </div>
@@ -65,6 +106,7 @@ function App() {
             placeholder="Type your message..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
+            onKeyPress={handleKeyPress}
           />
           <input type="file" accept="image/*" onChange={handleImageUpload} />
           <button onClick={handleSend}>Send</button>
