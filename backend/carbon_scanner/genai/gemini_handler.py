@@ -34,7 +34,6 @@ def text_resp(prompt: str) -> str:
     )
     return response.text
 
-
 if __name__ == "__main__":
     # Example usage
     prompt = "What is the capital of France?"

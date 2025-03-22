@@ -1,4 +1,5 @@
 import os
+import json
 from dotenv import load_dotenv
 import google.generativeai as genai
 # langchain libraries
@@ -6,6 +7,7 @@ from langchain.chains import RetrievalQA
 from langchain_core.messages import HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from langchain.vectorstores import DocArrayInMemorySearch
+from langchain_google_datastore import DatastoreLoader
 from langchain.schema.runnable import RunnableMap
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema.output_parser import StrOutputParser
@@ -40,7 +42,7 @@ template ="""You are a personal carbon footprint estimator expert.
 Your answer should be based off this context: {context}
 if the database does not have the answer, please provide your best estimate based on information you have found from the web.
 Do not say I dont know.
-Respond in numbers only, in the json format:
+Respond in numbers only, in a json format. Your responses should only be code, without explanation or formatting:
 {{"answer": "...", "confidence": "..."}}
 Where confidence is a value between 0 and 1, with 1 being completely confident and 0 being not confident at all.
 for this question: {question}
@@ -57,6 +59,7 @@ qa_chain = RetrievalQA.from_chain_type(
 )
 
 def text_resp(text : str):
-        a = qa_chain({"query": "What is the carbon footprint of a egg?"})["result"]
-        breakpoint()
-        return a
+        a = qa_chain({"query": text})["result"].split('\n')[1]
+        return json.dumps(a)
+
+print(text_resp("What is the carbon footprint of a egg?"))
