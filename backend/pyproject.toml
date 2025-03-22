@@ -1,0 +1,17 @@
+[project]
+name = "carbon-scanner"
+version = "0.0.0"
+description = "This is the backend code for Carbon Scanner, a web app that analyzes product carbon emissions."
+authors = [
+    {name = "GenAI4Env",email = "GenAI4Env/CarbonScanner@simplelogin.com"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
