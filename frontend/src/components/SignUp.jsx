@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import '../App.css';
+import { useAuth } from '../context/AuthContext';
 
 function SignUp({ onBack }) {
   const [formData, setFormData] = useState({
@@ -7,7 +8,8 @@ function SignUp({ onBack }) {
     password: '',
     confirmPassword: ''
   });
-  const [error, setError] = useState('');
+  const [validationError, setValidationError] = useState('');
+  const { signup, error } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,32 +17,44 @@ function SignUp({ onBack }) {
       ...prev,
       [name]: value
     }));
+    // Clear validation error when user starts typing
+    setValidationError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setValidationError('');
     
+    if (!formData.username || !formData.password || !formData.confirmPassword) {
+      setValidationError('Please fill in all fields');
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setValidationError('Passwords do not match');
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setValidationError('Password must be at least 6 characters long');
       return;
     }
 
-    // Here you would typically make an API call to register the user
-    console.log('Sign up data:', formData);
-    // For now, we'll just go back to the main page
-    onBack();
+    const success = await signup(formData.username, formData.password);
+    if (success) {
+      onBack();
+    }
   };
 
   return (
     <div className="auth-container">
       <div className="auth-box">
         <h2>Sign Up</h2>
-        {error && <div className="error-message">{error}</div>}
+        {(error || validationError) && (
+          <div className="error-message">
+            {error || validationError}
+          </div>
+        )}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="username">Username</label>

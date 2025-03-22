@@ -6,14 +6,15 @@ import userIcon from './assets/user.png';
 import leafIcon from './assets/leaf.png';
 import SignUp from './components/SignUp';
 import Login from './components/Login';
+import { useAuth } from './context/AuthContext';
 
 function App() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const { isLoggedIn, logout } = useAuth();
 
   const handleSend = () => {
     if (!inputText && !selectedImage) return;
@@ -76,7 +77,7 @@ function App() {
           {isLoggedIn ? (
             <>
               <button className="auth-button">Profile</button>
-              <button className="auth-button">Log Out</button>
+              <button className="auth-button" onClick={logout}>Log Out</button>
             </>
           ) : (
             <>

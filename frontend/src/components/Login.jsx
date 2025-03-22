@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import '../App.css';
+import { useAuth } from '../context/AuthContext';
 
 function Login({ onBack }) {
   const [formData, setFormData] = useState({
     username: '',
     password: ''
   });
-  const [error, setError] = useState('');
+  const { login, error } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -16,18 +17,17 @@ function Login({ onBack }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!formData.username || !formData.password) {
-      setError('Please fill in all fields');
       return;
     }
 
-    // Here you would typically make an API call to authenticate the user
-    console.log('Login data:', formData);
-    // For now, we'll just go back to the main page
-    onBack();
+    const success = await login(formData.username, formData.password);
+    if (success) {
+      onBack();
+    }
   };
 
   return (
