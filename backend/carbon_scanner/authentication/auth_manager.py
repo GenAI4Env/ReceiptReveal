@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any
 import uuid
 import hashlib
 import os
+import re
 from datetime import datetime
 
 
@@ -18,6 +19,38 @@ class User(UserMixin):
         self.created_at = kwargs.get("created_at", datetime.now())
         self.last_login = kwargs.get("last_login", None)
         self.profile = kwargs.get("profile", {})
+
+    @staticmethod
+    def sanitize_email(email: str) -> str:
+        """
+        Sanitize and ensure email is valid by:
+        1. Removing invalid characters
+        2. Replacing spaces with underscores
+        3. Appending @genai4env.joefang.org if no domain
+        """
+        # Check if email is already valid
+        if re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
+            return email
+
+        # If no @ symbol, it's missing a domain
+        if "@" not in email:
+            # Sanitize the local part: remove invalid chars, replace spaces with underscores
+            local_part = re.sub(
+                r"[^a-zA-Z0-9._%+-]", "", email.strip().replace(" ", "_")
+            )
+            return f"{local_part}@genai4env.joefang.org"
+
+        # If @ exists but email is still invalid, sanitize both parts
+        local_part, domain = email.split("@", 1)
+        local_part = re.sub(
+            r"[^a-zA-Z0-9._%+-]", "", local_part.strip().replace(" ", "_")
+        )
+
+        # If domain doesn't have a dot or is otherwise invalid, replace with our domain
+        if "." not in domain or not re.match(r"^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", domain):
+            return f"{local_part}@genai4env.joefang.org"
+
+        return f"{local_part}@{domain}"
 
     @staticmethod
     def hash_password(password: str) -> tuple[str, str]:
@@ -79,12 +112,15 @@ class AuthManager:
         self, email: str, password: str, **kwargs
     ) -> Optional[User]:
         """Register a new user in the system."""
+        # Sanitize email before registration
+        sanitized_email = User.sanitize_email(email)
+
         db = current_app.extensions.get("db")
         if not db:
             return None
 
         # Check if user already exists
-        existing_user = await db.get_user_by_email(email)
+        existing_user = await db.get_user_by_email(sanitized_email)
         if existing_user:
             return None
 
@@ -94,7 +130,7 @@ class AuthManager:
 
         user_data = {
             "id": user_id,
-            "email": email,
+            "email": sanitized_email,
             "password_hash": hashed_pw,
             "password_salt": salt,
             "created_at": datetime.now(),
@@ -105,19 +141,22 @@ class AuthManager:
         # Save to database
         try:
             await db.create_user(user_data)
-            return User(user_id=user_id, email=email, **kwargs)
+            return User(user_id=user_id, email=sanitized_email, **kwargs)
         except Exception as e:
             current_app.logger.error(f"Error creating user: {str(e)}")
             return None
 
     async def login(self, email: str, password: str) -> Optional[User]:
         """Log a user in by email and password."""
+        # Sanitize email before login
+        sanitized_email = User.sanitize_email(email)
+
         db = current_app.extensions.get("db")
         if not db:
             return None
 
         # Get user from database
-        user_data = await db.get_user_by_email(email)
+        user_data = await db.get_user_by_email(sanitized_email)
         if not user_data:
             return None
 
