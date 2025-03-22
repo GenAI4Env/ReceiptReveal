@@ -24,7 +24,6 @@ def image_resp(prompt: str, image: ImageFile) -> str:
     )
     return response.text
 
-
 def text_resp(prompt: str) -> str:
     """
     Generates a model response based on a text prompt.
