@@ -2,6 +2,7 @@ import aiosqlite
 from carbon_scanner.config import config
 from datetime import datetime
 from typing import Optional, Dict, Any, List, Tuple, Union
+from flask import Flask, current_app
 
 DATABASE_URL = config.DATABASE_URL
 
@@ -10,6 +11,7 @@ class DatabaseManager:
     def __init__(self, db_url: str = DATABASE_URL) -> None:
         self.db_url: str = db_url
         self.conn: Optional[aiosqlite.Connection] = None
+        self._app: Optional[Flask] = None
 
     async def __aenter__(self) -> "DatabaseManager":
         self.conn = await aiosqlite.connect(self.db_url)
@@ -19,6 +21,29 @@ class DatabaseManager:
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         if self.conn:
             await self.conn.close()
+
+    def init_app(self, app: Flask) -> None:
+        """Initialize the database manager with a Flask application."""
+        self._app = app
+
+        # Register extension in Flask app
+        if not hasattr(app, "extensions"):
+            app.extensions = {}
+        app.extensions["db"] = self
+
+        # Configure teardown handler to close connections
+        @app.teardown_appcontext
+        async def close_connection(_: Optional[Exception]) -> None:
+            if self.conn:
+                await self.conn.close()
+                self.conn = None
+
+        # Register before_request handler to ensure connection is available
+        @app.before_request
+        async def ensure_connection() -> None:
+            if not self.conn:
+                self.conn = await aiosqlite.connect(self.db_url)
+                await self._initialize_tables()
 
     async def _initialize_tables(self) -> None:
         # Create a simple users table and prompts table for storing context

@@ -7,6 +7,7 @@ import os
 import re
 import base64
 from datetime import datetime
+from carbon_scanner.database.db_manager import DatabaseManager
 
 
 class User(UserMixin):
@@ -70,11 +71,14 @@ class AuthManager:
         @self.login_manager.user_loader
         async def load_user(user_id: str) -> Optional[User]:
             """Load a user from the database by ID."""
-            db = current_app.extensions.get("db")
+            # Get db from Flask extensions
+            db: Optional[DatabaseManager] = current_app.extensions.get("db")
             if not db:
+                current_app.logger.error("Database extension not initialized")
                 return None
+
             try:
-                # Use the db_manager method instead of direct SQL
+                # Use the db_manager method to retrieve user
                 user_data = await db.get_user_by_id(user_id)
                 if user_data:
                     return User(
@@ -172,6 +176,12 @@ class AuthManager:
 if __name__ == "__main__":
     # Example usage
     app = Flask(__name__)
-    auth_manager = AuthManager(app)
     app.config["SECRET_KEY"] = "your_secret_key"
     app.config["DEBUG"] = True
+
+    # Initialize database extension first
+    db_manager = DatabaseManager()
+    db_manager.init_app(app)
+
+    # Then initialize auth manager
+    auth_manager = AuthManager(app)
