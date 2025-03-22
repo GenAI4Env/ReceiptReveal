@@ -5,6 +5,7 @@ import uuid
 import hashlib
 import os
 import re
+import base64
 from datetime import datetime
 
 
@@ -23,34 +24,18 @@ class User(UserMixin):
     @staticmethod
     def sanitize_email(email: str) -> str:
         """
-        Sanitize and ensure email is valid by:
-        1. Removing invalid characters
-        2. Replacing spaces with underscores
-        3. Appending @genai4env.joefang.org if no domain
+        Validate email or encode it if invalid:
+        1. Check if email is valid with a simple regex
+        2. If invalid, encode the entire string and use it as the local part
         """
-        # Check if email is already valid
+        # Check if email is already valid with a single regex
         if re.match(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", email):
             return email
 
-        # If no @ symbol, it's missing a domain
-        if "@" not in email:
-            # Sanitize the local part: remove invalid chars, replace spaces with underscores
-            local_part = re.sub(
-                r"[^a-zA-Z0-9._%+-]", "", email.strip().replace(" ", "_")
-            )
-            return f"{local_part}@genai4env.joefang.org"
-
-        # If @ exists but email is still invalid, sanitize both parts
-        local_part, domain = email.split("@", 1)
-        local_part = re.sub(
-            r"[^a-zA-Z0-9._%+-]", "", local_part.strip().replace(" ", "_")
-        )
-
-        # If domain doesn't have a dot or is otherwise invalid, replace with our domain
-        if "." not in domain or not re.match(r"^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", domain):
-            return f"{local_part}@genai4env.joefang.org"
-
-        return f"{local_part}@{domain}"
+        # If email is invalid, encode the entire string to ensure it's safe
+        # Use urlsafe base64 encoding (removing padding characters)
+        encoded_email = base64.b32hexencode(email.encode()).decode().lower()
+        return f"{encoded_email}@genai4env.joefang.org"
 
     @staticmethod
     def hash_password(password: str) -> tuple[str, str]:
