@@ -118,6 +118,7 @@ async def get_coins():
 
 
 @app.route("/db/coins", methods=["POST"])
+@login_required
 async def update_coins():
     data = request.get_json()
     async with DatabaseManager() as db:
