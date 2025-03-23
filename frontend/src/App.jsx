@@ -17,10 +17,10 @@ function App() {
       console.log(jsonData);
       return (
         <div>
-          <h3>This is how much kgm of carbon each raw item in your reciept is:</h3>
+          <h3>Kgm Carbon calculation for the raw materials in your reciept from cradle to grave:</h3>
           {Object.entries(jsonData).map(([key, value]) => (
             <div>
-              <strong>{key}:</strong> {typeof value === 'object' ? JSON.stringify(value) : value}
+              <strong>{key}:</strong> {typeof value === 'object' ? JSON.stringify(value) : value} kgm
             </div>
           ))}
         </div>
