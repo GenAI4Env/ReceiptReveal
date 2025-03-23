@@ -119,14 +119,13 @@ class DatabaseManager:
 
     async def create_user(self, user_data: Dict[str, Any]) -> None:
         await self.conn.execute(
-            "INSERT INTO users (id, email, password_hash, password_salt, created_at, is_active) VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO users (email, password_hash, password_salt, created_at, is_active) VALUES (?, ?, ?, ?, ?)",
             (
-                user_data["id"],
                 user_data["email"],
                 user_data["password_hash"],
                 user_data["password_salt"],
                 str(user_data["created_at"]),
-                1 if user_data.get("is_active") else 0,
+                user_data.get("is_active", 1),  # Default to active (1)
             ),
         )
         await self.conn.commit()

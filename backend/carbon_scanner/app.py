@@ -165,4 +165,5 @@ def main():
 
 
 if __name__ == "__main__":
+    print(config.DATABASE_URL)
     main()

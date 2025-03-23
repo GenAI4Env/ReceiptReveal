@@ -107,15 +107,17 @@ class AuthManager:
         db = current_app.extensions.get("db")
         if not db:
             return None
-
+        print("db", db)
         # Check if user already exists
         existing_user = await db.get_user_by_email(sanitized_email)
         if existing_user:
             return None
-
+        print("existing_user", existing_user)
         # Create new user with hashed password
         hashed_pw, salt = User.hash_password(password)
         user_id = str(uuid.uuid4())
+        print("hashed_pw", hashed_pw)
+        print("userid", user_id)
 
         user_data = {
             "id": user_id,
@@ -127,9 +129,11 @@ class AuthManager:
             **kwargs,
         }
 
+        print("user_data", user_data)
         # Save to database
         try:
             await db.create_user(user_data)
+            print("waited")
             return User(user_id=user_id, email=sanitized_email, **kwargs)
         except Exception as e:
             current_app.logger.error(f"Error creating user: {str(e)}")
@@ -139,13 +143,16 @@ class AuthManager:
         """Log a user in by email and password."""
         # Sanitize email before login
         sanitized_email = User.sanitize_email(email)
+        print("sanitized_email", sanitized_email)
 
         db = current_app.extensions.get("db")
+        print("db", db)
         if not db:
             return None
 
         # Get user from database
         user_data = await db.get_user_by_email(sanitized_email)
+        print("user_data", user_data)
         if not user_data:
             return None
 
@@ -154,9 +161,11 @@ class AuthManager:
             password, user_data["password_hash"], user_data["password_salt"]
         ):
             return None
+        print("password", password)
 
         # Update last login
         await db.update_user_login(user_data["id"])
+        print("update")
 
         # Create user object
         user = User(
@@ -167,6 +176,8 @@ class AuthManager:
             last_login=datetime.now(),
             profile=user_data.get("profile", {}),
         )
+        print("user", user)
+
 
         # Use Flask-Login to log in user
         login_user(user)
