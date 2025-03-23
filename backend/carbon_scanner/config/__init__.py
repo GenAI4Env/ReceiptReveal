@@ -16,7 +16,7 @@ class Config:
 
     @property
     def SECRET_KEY(self) -> str:
-        return os.getenv("SECRET_KEY", "L-S5e3_NsEHnix3-g03Go")
+        return os.getenv("SECRET_KEY", "")
 
 
 config = Config()

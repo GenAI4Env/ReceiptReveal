@@ -35,7 +35,7 @@ class User(UserMixin):
         # If email is invalid, encode the entire string to ensure it's safe
         # Use urlsafe base64 encoding (removing padding characters)
         encoded_email = base64.b32hexencode(email.encode()).decode().lower()
-        return f"{encoded_email}@genai4env.joefang.org"
+        return f"{encoded_email}@email.mail.org"
 
     @staticmethod
     def hash_password(password: str) -> Tuple[str, str]:
