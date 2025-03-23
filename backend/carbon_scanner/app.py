@@ -114,9 +114,8 @@ async def update_coins():
     data = request.get_json()
     user = await auth_manager.login(data.get("email"), data.get("password"))
     if coins := data.get("coins"):
-
         async with DatabaseManager() as db:
-            result = await db.update_coins_by_id(user_id=user.id, amount=data["coins"])
+            result = await db.update_coins_by_id(user_id=user.id, amount=coins)
         return (
             (jsonify({"message": "Coins updated"}), 201)
             if result
