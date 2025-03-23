@@ -12,7 +12,7 @@ class Config:
 
     @property
     def DATABASE_URL(self) -> str:
-        return os.getenv("DATABASE_URL", "file:/tmp/carbon_scanner.db")
+        return os.getenv("DATABASE_URL", "sqlite:////tmp/carbon_scanner.db")
 
     @property
     def SECRET_KEY(self) -> str:
