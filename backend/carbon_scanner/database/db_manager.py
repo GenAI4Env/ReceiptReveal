@@ -6,6 +6,7 @@ from flask import Flask, current_app
 
 DATABASE_URL = config.DATABASE_URL
 
+
 class DatabaseManager:
     def __init__(self, db_url: str = DATABASE_URL) -> None:
         self.db_url: str = db_url
@@ -22,7 +23,6 @@ class DatabaseManager:
             await self.conn.close()
 
     def init_app(self, app: Flask) -> None:
-        print("initializing")
         """Initialize the database manager with a Flask application."""
         self._app = app
 
@@ -53,7 +53,6 @@ class DatabaseManager:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 password TEXT,
                 email TEXT UNIQUE,
-                coins INTEGER DEFAULT 0,
                 password_hash TEXT,
                 password_salt TEXT,
                 created_at TEXT,
@@ -135,19 +134,6 @@ class DatabaseManager:
         await self.conn.execute(
             "UPDATE users SET last_login = ? WHERE id = ?",
             (datetime.now().isoformat(), user_id),
-        )
-        await self.conn.commit()
-    
-    async def update_coins(self, user_id: str, coins : int) -> None:
-        # Get the current coins value
-        cursor = await self.conn.execute(
-            "SELECT coins FROM users WHERE id = ?", (user_id,)
-        )
-        row = await cursor.fetchone()
-        
-        # Update the coins using parameterized query
-        await self.conn.execute(
-            "UPDATE users SET coins = ? WHERE id = ?", (coins, user_id)
         )
         await self.conn.commit()
 
