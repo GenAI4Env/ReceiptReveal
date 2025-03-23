@@ -108,6 +108,14 @@ async def get_prompts():
     return jsonify(prompts)
 
 
+@app.route("/db/coins", methods=["GET"])
+async def get_coins():
+    user_id = request.args.get("user_id", type=int)
+    async with DatabaseManager() as db:
+        coins = await db.get_coins_by_id(user_id)
+    return jsonify({"coins": coins})
+
+
 @app.route("/db/coins", methods=["POST"])
 async def update_coins():
     data = request.get_json()

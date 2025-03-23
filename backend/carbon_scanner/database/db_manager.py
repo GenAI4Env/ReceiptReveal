@@ -153,6 +153,24 @@ class DatabaseManager:
         )
         return await cursor.fetchall()
 
+    async def get_coins_by_id(self, user_id: int) -> int:
+        cursor = await self.conn.execute(
+            "SELECT coins FROM users WHERE id = ?", (user_id,)
+        )
+        row = await cursor.fetchone()
+        if not row:
+            return 0
+        return row[0] or 0
+
+    async def get_coins_by_email(self, email: str) -> int:
+        cursor = await self.conn.execute(
+            "SELECT coins FROM users WHERE email = ?", (email,)
+        )
+        row = await cursor.fetchone()
+        if not row:
+            return 0
+        return row[0] or 0
+
     async def update_coins_by_id(self, user_id: int, amount: int) -> bool:
         cursor = await self.conn.execute(
             "SELECT coins FROM users WHERE id = ?", (user_id,)
