@@ -1,37 +1,81 @@
-// This is a mock database service. In a real app, you would connect to your backend API
-const users = JSON.parse(localStorage.getItem('users') || '[]');
+// Service to interact with backend authentication endpoints
+const API_URL = 'http://localhost:5000'; // Adjust this to your backend URL
 
 export const dbService = {
-  // Check if user exists
-  async findUser(username) {
-    return users.find(user => user.username === username);
+  // Register a new user
+  async addUser(email, password) {
+    try {
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email : email, password : password }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Registration failed');
+      }
+      
+      // Store email for convenience (but not password)
+      localStorage.setItem('email', email);
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
   },
 
-  // Add new user
-  async addUser(username, password) {
-    if (await this.findUser(username)) {
-      throw new Error('Username already exists');
+  // Verify user credentials (login)
+  async verifyUser(email, password) {
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Login failed');
+      }
+      
+      // Store email for convenience (but not password)
+      localStorage.setItem('email', email);
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
     }
-    
-    const newUser = {
-      username,
-      password, // In a real app, this should be hashed
-      createdAt: new Date().toISOString()
-    };
-    
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('email', username);
-    localStorage.setItem('password', password);
-    return newUser;
   },
-
-  // Verify user credentials
-  async verifyUser(username, password) {
-    const user = await this.findUser(username);
-    if (!user || user.password !== password) {
-      throw new Error('Invalid username or password');
+  
+  // Logout user
+  async logoutUser() {
+    try {
+      const response = await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Logout failed');
+      }
+      
+      // Clear stored email
+      localStorage.removeItem('email');
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
     }
-    return user;
   }
 }; 
