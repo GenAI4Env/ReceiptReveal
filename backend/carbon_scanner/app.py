@@ -6,11 +6,28 @@ from PIL import Image
 from carbon_scanner.config import config
 from carbon_scanner.images import ImageUploader
 from flask_cors import CORS, cross_origin
+import os
+from werkzeug.utils import secure_filename
+from flask_login import login_required, current_user
+
 app = Flask(__name__)
 cors = CORS(app) # allow CORS for all domains on all routes.
 app.config['CORS_HEADERS'] = 'Content-Type'
-
+app.config['UPLOAD_FOLDER'] = 'uploads'  # Configure upload folder
 app.config["SECRET_KEY"] = config.SECRET_KEY
+
+# Create upload folder if it doesn't exist
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Initialize database manager
+db_manager = DatabaseManager()
+
+# Define allowed file extensions
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 auth_manager = AuthManager(app)
 
 
@@ -95,21 +112,37 @@ async def update_coins():
         )
     return jsonify({"message": "coins stored"}), 201
 
-@app.route("/images/upload", methods=["POST"])
-def upload_image():
-    """Endpoint to upload an image."""
-    file = request.files.get("image")
-    if not file:
-        return jsonify({"error": "No image provided"}), 400
-    return (
-        jsonify(
-            {
-                "message": "Image uploaded successfully",
-                "url": ImageUploader.upload_image(file),
-            }
-        ),
-        201,
-    )
+@app.route('/api/upload', methods=['POST'])
+@login_required
+async def upload_image():
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image provided'}), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+        
+        if file and allowed_file(file.filename):
+            # Save the image
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            
+            # Process the image with Gemini
+            response = await image_resp("Analyze this receipt and extract the total amount and items purchased.", file_path)
+            
+            # Increment user's coins by 10
+            await db_manager.change_coins(current_user.id, 10)
+            
+            return jsonify({
+                'message': 'Image uploaded successfully',
+                'response': response
+            })
+        else:
+            return jsonify({'error': 'Invalid file type'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 def main():
