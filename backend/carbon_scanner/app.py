@@ -11,22 +11,24 @@ from werkzeug.utils import secure_filename
 from flask_login import login_required, current_user
 
 app = Flask(__name__)
-cors = CORS(app) # allow CORS for all domains on all routes.
-app.config['CORS_HEADERS'] = 'Content-Type'
-app.config['UPLOAD_FOLDER'] = 'uploads'  # Configure upload folder
+cors = CORS(app)  # allow CORS for all domains on all routes.
+app.config["CORS_HEADERS"] = "Content-Type"
+app.config["UPLOAD_FOLDER"] = "uploads"  # Configure upload folder
 app.config["SECRET_KEY"] = config.SECRET_KEY
 
 # Create upload folder if it doesn't exist
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 # Initialize database manager
 db_manager = DatabaseManager()
 
 # Define allowed file extensions
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 auth_manager = AuthManager(app)
 
@@ -77,6 +79,7 @@ def genai_image():
     image_file = Image.open(file)
     return jsonify({"response": image_resp(prompt, image_file)})
 
+
 @app.route("/genai/reciept", methods=["POST"])
 def genai_reciept():
     print(f"i have recieved a reciept : {request.files}")
@@ -85,6 +88,7 @@ def genai_reciept():
         return jsonify({"error": "No image provided"}), 400
     image_file = Image.open(file)
     return jsonify({"response": reciept_resp(image_file)})
+
 
 @app.route("/db/prompts", methods=["POST"])
 async def store_prompt():
@@ -103,46 +107,54 @@ async def get_prompts():
         prompts = await db.get_prompts_for_user(user_id)
     return jsonify(prompts)
 
+
 @app.route("/db/coins", methods=["POST"])
 async def update_coins():
     data = request.get_json()
     async with DatabaseManager() as db:
-        await db.change_coins(
-            data["user_id"], data["coins"] 
+        result = await db.update_coins_by_id(
+            user_id=data["user_id"], amount=data["coins"]
         )
-    return jsonify({"message": "coins stored"}), 201
+    return (
+        (jsonify({"message": "Coins updated"}), 201)
+        if result
+        else (jsonify({"message": "Failed to update coins"}), 400)
+    )
 
-@app.route('/api/upload', methods=['POST'])
+
+@app.route("/api/upload", methods=["POST"])
 @login_required
 async def upload_image():
     try:
-        if 'image' not in request.files:
-            return jsonify({'error': 'No image provided'}), 400
-        
-        file = request.files['image']
-        if file.filename == '':
-            return jsonify({'error': 'No selected file'}), 400
-        
+        if "image" not in request.files:
+            return jsonify({"error": "No image provided"}), 400
+
+        file = request.files["image"]
+        if file.filename == "":
+            return jsonify({"error": "No selected file"}), 400
+
         if file and allowed_file(file.filename):
             # Save the image
             filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
             file.save(file_path)
-            
+
             # Process the image with Gemini
-            response = await image_resp("Analyze this receipt and extract the total amount and items purchased.", file_path)
-            
+            response = await image_resp(
+                "Analyze this receipt and extract the total amount and items purchased.",
+                file_path,
+            )
+
             # Increment user's coins by 10
             await db_manager.change_coins(current_user.id, 10)
-            
-            return jsonify({
-                'message': 'Image uploaded successfully',
-                'response': response
-            })
+
+            return jsonify(
+                {"message": "Image uploaded successfully", "response": response}
+            )
         else:
-            return jsonify({'error': 'Invalid file type'}), 400
+            return jsonify({"error": "Invalid file type"}), 400
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 def main():
