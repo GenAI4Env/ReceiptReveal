@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from carbon_scanner.authentication.auth_manager import AuthManager
-from carbon_scanner.genai.gemini_handler import text_resp, image_resp
+from carbon_scanner.genai.gemini_handler import text_resp, image_resp, reciept_resp
 from carbon_scanner.database.db_manager import DatabaseManager
 from PIL import Image
 from carbon_scanner.config import config
@@ -56,6 +56,14 @@ def genai_image():
         return jsonify({"error": "No image provided"}), 400
     image_file = Image.open(file)
     return jsonify({"response": image_resp(prompt, image_file)})
+
+@app.route("/genai/reciept", methods=["POST"])
+def genai_reciept():
+    file = request.files.get("image")
+    if not file:
+        return jsonify({"error": "No image provided"}), 400
+    image_file = Image.open(file)
+    return jsonify({"response": reciept_resp(image_file)})
 
 
 @app.route("/db/prompts", methods=["POST"])
