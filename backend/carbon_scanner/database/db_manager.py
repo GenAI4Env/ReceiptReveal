@@ -57,7 +57,8 @@ class DatabaseManager:
                 password_salt TEXT,
                 created_at TEXT,
                 is_active INTEGER DEFAULT 1,
-                last_login TEXT
+                last_login TEXT,
+                coins INTEGER DEFAULT 0
             );
             """
         )
@@ -151,3 +152,37 @@ class DatabaseManager:
             "SELECT id, prompt, context FROM prompts WHERE user_id = ?", (user_id,)
         )
         return await cursor.fetchall()
+
+    async def update_coins_by_id(self, user_id: int, amount: int) -> bool:
+        cursor = await self.conn.execute(
+            "SELECT coins FROM users WHERE id = ?", (user_id,)
+        )
+        row = await cursor.fetchone()
+        if not row:
+            return False
+        current_coins = row[0] or 0
+        new_coins = current_coins + amount
+        if new_coins < 0:
+            return False
+        await self.conn.execute(
+            "UPDATE users SET coins = ? WHERE id = ?", (new_coins, user_id)
+        )
+        await self.conn.commit()
+        return True
+
+    async def update_coins_by_email(self, email: str, amount: int) -> bool:
+        cursor = await self.conn.execute(
+            "SELECT coins FROM users WHERE email = ?", (email,)
+        )
+        row = await cursor.fetchone()
+        if not row:
+            return False
+        current_coins = row[0] or 0
+        new_coins = current_coins + amount
+        if new_coins < 0:
+            return False
+        await self.conn.execute(
+            "UPDATE users SET coins = ? WHERE email = ?", (new_coins, email)
+        )
+        await self.conn.commit()
+        return True
