@@ -75,7 +75,7 @@ function App() {
             headers: {
               "Content-Type": "application/json"
             },
-            body: JSON.stringify({email: localStorage.getItem('email'), password : localStorage.getItem('password'), coins : 0})
+            body: JSON.stringify({email: localStorage.getItem('email'), password : localStorage.getItem('password'), coins : 10})
           }).then(response => console.log(response));
           
         })

@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from carbon_scanner.authentication.auth_manager import AuthManager
 from carbon_scanner.genai.gemini_handler import text_resp, image_resp, reciept_resp
 from carbon_scanner.database.db_manager import DatabaseManager
+from carbon_scanner.database.sqllite_manager import insert_user, get_coins, inc_coins
 from PIL import Image
 from carbon_scanner.config import config
 from carbon_scanner.images import ImageUploader
@@ -38,13 +39,16 @@ auth_manager = AuthManager(app)
 async def register():
     data = request.get_json()
     email = data.get("email")
-    password = data.get("password")
-    user = await auth_manager.register_user(email, password)
-    return (
-        (jsonify({"message": "User registered"}), 201)
-        if user
-        else (jsonify({"error": "User exists"}), 400)
-    )
+    print(email, type(email))
+    insert_user(email, 0)
+    return jsonify({"message": "User registered successfully"}), 201
+#    password = data.get("password")
+#    user = await auth_manager.register_user(email, password)
+#    return (
+#        (jsonify({"message": "User registered"}), 201)
+#        if user
+#        else (jsonify({"error": "User exists"}), 400)
+#    )
 
 
 @app.route("/auth/login", methods=["POST"])
@@ -101,28 +105,30 @@ async def store_prompt():
     return jsonify({"message": "Prompt stored"}), 201
 
 
-@app.route("/db/prompts", methods=["GET"])
+@app.route("/db/coinsget", methods=["POST"])
 async def get_prompts():
-    user_id = request.args.get("user_id", type=int)
-    async with DatabaseManager() as db:
-        prompts = await db.get_prompts_for_user(user_id)
-    return jsonify(prompts)
+    data = request.get_json()
+#        prompts = await db.get_prompts_for_user(user_id)
+    return get_coins(data.get("email"))
+    #return jsonify(prompts/)
 
 
 @app.route("/db/coins", methods=["POST"])
 async def update_coins():
     data = request.get_json()
-    user = await auth_manager.login(data.get("email"), data.get("password"))
+    #user = await auth_manager.login(data.get("email"), data.get("password"))
     if coins := data.get("coins"):
-        result = await db_manager.update_coins_by_id(user_id=user.id, amount=coins)
-        return (
-            (jsonify({"message": "Coins updated"}), 201)
-            if result
-            else (jsonify({"message": "Failed to update coins"}), 400)
-        )
-
-    coins = await db_manager.get_coins_by_id(user.id)
-    return jsonify({"coins": coins})
+        inc_coins(data.get("email"), coins)
+#        result = await db_manager.update_coins_by_id(user_id=user.id, amount=coins)
+#        return (
+#            (jsonify({"message": "Coins updated"}), 201)
+#            if result
+#            else (jsonify({"message": "Failed to update coins"}), 400)
+#        )
+#
+#    coins = await db_manager.get_coins_by_id(user.id)
+    print("HELLLL YEA3")
+    return jsonify({"coins": get_coins(data.get("email"))})
 
 
 @app.route("/api/upload", methods=["POST"])
