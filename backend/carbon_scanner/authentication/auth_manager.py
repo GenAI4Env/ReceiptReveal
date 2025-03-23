@@ -53,6 +53,10 @@ class User(UserMixin):
         ).hexdigest()
         return test_hash == hashed_pw
 
+    def get_id(self) -> str:
+        """Get the user ID."""
+        return self.id
+
 
 class AuthManager:
     """Manages authentication using Flask-Login."""
@@ -68,30 +72,30 @@ class AuthManager:
         self.login_manager.login_view = "auth.login"
         self.login_manager.login_message = "Please log in to access this page."
 
-        @self.login_manager.user_loader
-        async def load_user(user_id: str) -> Optional[User]:
-            """Load a user from the database by ID."""
-            # Get db from Flask extensions
-            db: Optional[DatabaseManager] = current_app.extensions.get("db")
-            if not db:
-                current_app.logger.error("Database extension not initialized")
-                return None
+    @self.login_manager.user_loader
+    async def load_user(user_id: str) -> Optional[User]:
+        """Load a user from the database by ID."""
+        # Get db from Flask extensions
+        db: Optional[DatabaseManager] = current_app.extensions.get("db")
+        if not db:
+            current_app.logger.error("Database extension not initialized")
+            return None
 
-            try:
-                # Use the db_manager method to retrieve user
-                user_data = await db.get_user_by_id(user_id)
-                if user_data:
-                    return User(
-                        user_id=str(user_data["id"]),
-                        email=user_data["email"],
-                        is_active=user_data["is_active"],
-                        created_at=user_data["created_at"],
-                        last_login=user_data["last_login"],
-                    )
-                return None
-            except Exception as e:
-                current_app.logger.error(f"Error loading user: {str(e)}")
-                return None
+        try:
+            # Use the db_manager method to retrieve user
+            user_data = await db.get_user_by_id(user_id)
+            if user_data:
+                return User(
+                    user_id=str(user_data["id"]),
+                    email=user_data["email"],
+                    is_active=user_data["is_active"],
+                    created_at=user_data["created_at"],
+                    last_login=user_data["last_login"],
+                )
+            return None
+        except Exception as e:
+            current_app.logger.error(f"Error loading user: {str(e)}")
+            return None
 
     async def register_user(
         self, email: str, password: str, **kwargs: Any

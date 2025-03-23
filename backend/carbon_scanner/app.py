@@ -110,6 +110,7 @@ async def get_prompts():
 
 @app.route("/db/coins", methods=["GET"])
 @login_required
+@l
 async def get_coins():
     user_id = current_user.id
     async with DatabaseManager() as db:
