@@ -113,17 +113,15 @@ async def update_coins():
     data = request.get_json()
     user = await auth_manager.login(data.get("email"), data.get("password"))
     if coins := data.get("coins"):
-        async with DatabaseManager() as db:
-            result = await db.update_coins_by_id(user_id=user.id, amount=coins)
+        result = await db_manager.update_coins_by_id(user_id=user.id, amount=coins)
         return (
             (jsonify({"message": "Coins updated"}), 201)
             if result
             else (jsonify({"message": "Failed to update coins"}), 400)
         )
 
-    async with DatabaseManager() as db:
-        coins = await db.get_coins_by_id(user.id)
-        return jsonify({"coins": coins})
+    coins = await db_manager.get_coins_by_id(user.id)
+    return jsonify({"coins": coins})
 
 
 @app.route("/api/upload", methods=["POST"])
