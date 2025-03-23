@@ -109,7 +109,6 @@ async def get_prompts():
 
 
 @app.route("/db/coins", methods=["POST"])
-@login_required
 async def update_coins():
     data = request.get_json()
     user = await auth_manager.login(data.get("email"), data.get("password"))
