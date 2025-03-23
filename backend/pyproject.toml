@@ -25,6 +25,7 @@ dependencies = [
     "langchain-community (>=0.3.20,<0.4.0)",
     "docarray (>=0.41.0,<0.42.0)",
     "langchain-google-datastore (>=0.3.1,<0.4.0)",
+    "flask-cors (>=5.0.1,<6.0.0)",
 ]
 
 [build-system]

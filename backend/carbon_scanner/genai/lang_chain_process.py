@@ -18,12 +18,14 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 # --- loading env for api keys ---
 load_dotenv()
 # --- fetch the google gemini ---
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-pro-exp", temperature=0.7)
+llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.7)
+# gemni-2.0-pro-exp-02-05
 # result = llm.invoke("hello who is this?")
 # print(result.text)
 
 #  ------ setup RAG -----
 
+# load all the data
 loader = CSVLoader(file_path="./genai/Food_Production.csv")
 data = loader.load()
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
@@ -40,8 +42,9 @@ template = """You are a personal carbon footprint estimator expert.
 Your answer should be based off this context: {context}
 if the database does not have the answer, please provide your best estimate based on information you have found from the web.
 Do not say I dont know.
-Respond in numbers only, in a json format. Your responses should only be code, without explanation or formatting:
-{{"answer": "...", "confidence": "..."}}
+Respond in numbers only, in a the following format, do not explain or format the output.
+Give me the JSON data as plain text, without using code blocks or formatting markers
+{{<item name>: [<carbon cost>, <confidence>]}},
 Where confidence is a value between 0 and 1, with 1 being completely confident and 0 being not confident at all.
 for this question: {question}
 """
@@ -56,12 +59,18 @@ qa_chain = RetrievalQA.from_chain_type(
     chain_type_kwargs={"prompt": prompt},
 )
 
-
 def text_resp(text: str):
-    a = qa_chain({"query": text})["result"].split("\n")[1]
-    return json.dumps(a)
+    a = qa_chain({"query": text})["result"]
+    return a
 
+def list_resp(text: str):
+    resp = text_resp(f"what is the carbon footprint for each item in this list? {text}")
+    ret_dict = dict()
+    for i,v in dict(json.loads(resp)).items():
+        ret_dict[i] = round(v[0] * v[1], 2)
+    return json.dumps(ret_dict)
 
 if __name__ == "__main__":
     # Example usage
-    print(text_resp("What is the carbon footprint of a egg?"))
+    print(text_resp("what is in this dataset?"))
+    breakpoint()
