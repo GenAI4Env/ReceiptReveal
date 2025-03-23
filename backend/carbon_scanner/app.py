@@ -108,28 +108,24 @@ async def get_prompts():
     return jsonify(prompts)
 
 
-@app.route("/db/coins", methods=["GET"])
-@login_required
-async def get_coins():
-    user_id = current_user.id
-    async with DatabaseManager() as db:
-        coins = await db.get_coins_by_id(user_id)
-    return jsonify({"coins": coins})
-
-
 @app.route("/db/coins", methods=["POST"])
 @login_required
 async def update_coins():
     data = request.get_json()
-    async with DatabaseManager() as db:
-        result = await db.update_coins_by_id(
-            user_id=current_user.id, amount=data["coins"]
+    user = await auth_manager.login(data.get("email"), data.get("password"))
+    if coins := data.get("coins"):
+
+        async with DatabaseManager() as db:
+            result = await db.update_coins_by_id(user_id=user.id, amount=data["coins"])
+        return (
+            (jsonify({"message": "Coins updated"}), 201)
+            if result
+            else (jsonify({"message": "Failed to update coins"}), 400)
         )
-    return (
-        (jsonify({"message": "Coins updated"}), 201)
-        if result
-        else (jsonify({"message": "Failed to update coins"}), 400)
-    )
+
+    async with DatabaseManager() as db:
+        coins = await db.get_coins_by_id(user.id)
+        return jsonify({"coins": coins})
 
 
 @app.route("/api/upload", methods=["POST"])
