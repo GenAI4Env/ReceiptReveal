@@ -44,7 +44,7 @@ if the database does not have the answer, please provide your best estimate base
 Do not say I dont know.
 Respond in numbers only, in a the following format, do not explain or format the output.
 Give me the JSON data as plain text, without using code blocks or formatting markers
-{{"item": "...", "carbon_cost" : "...", "confidence": "..."}}
+{{<item name>: [<carbon cost>, <confidence>]}},
 Where confidence is a value between 0 and 1, with 1 being completely confident and 0 being not confident at all.
 for this question: {question}
 """
@@ -59,27 +59,17 @@ qa_chain = RetrievalQA.from_chain_type(
     chain_type_kwargs={"prompt": prompt},
 )
 
-
-def format_response(inp_list):
-    ret_list = []
-    for item in inp_list:
-        try:
-            # Parse each JSON string into a Python dictionary
-            json_obj = json.loads(item.rstrip(','))  # Remove trailing comma if present
-            ret_list.append(json_obj)
-        except json.JSONDecodeError:
-            # Skip invalid JSON entries
-            continue
-    # Return the list of dictionaries as a JSON string
-    return json.dumps(ret_list)
-
 def text_resp(text: str):
-    a = qa_chain({"query": text})["result"].split('\n')
-    print(a)
-    return format_response(a)
+    a = qa_chain({"query": text})["result"]
+    return a
 
 def list_resp(text: str):
-    return text_resp(f"what is the carbon footprinto for each item in this list? {text}")
+    resp = text_resp(f"what is the carbon footprint for each item in this list? {text}")
+    ret_dict = dict()
+    for i,v in dict(json.loads(resp)).items():
+        ret_dict[i] = round(v[0] * v[1], 2)
+    return json.dumps(ret_dict)
+
 if __name__ == "__main__":
     # Example usage
     print(text_resp("what is in this dataset?"))

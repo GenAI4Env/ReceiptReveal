@@ -24,15 +24,14 @@ def text_resp(prompt: str) -> str:
     """
     Generates a model response based on a text prompt.
     """
-    response = model.generate_content(prompt)
+    response = model.generate_content(f"given the following prompt, restrict your response to less than 300 words {prompt}")
     return response.text
 
 def reciept_resp(image: ImageFile) -> str:
    prompt = "break down all items in this reciept into a list of the raw materials, then return that as a comma seperated list"  
    itemlist=image_resp(prompt, image)
    print(f"item list : {itemlist}")
-   retjson = lang_chain_process.list_resp(itemlist)
-   return retjson
+   return lang_chain_process.list_resp(itemlist)
 
 if __name__ == "__main__":
     # Example usage
