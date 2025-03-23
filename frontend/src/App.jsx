@@ -54,6 +54,8 @@ function App() {
       console.log(" Image is : ")
       console.log(selectedImage)
       console.log(selectedFile)
+
+
       fetch('http://127.0.0.1:5000/genai/reciept',{
         method: "POST",
         body: formData
@@ -67,6 +69,15 @@ function App() {
             timestamp: new Date().toISOString()
           };
           setMessages(prev => [...prev, aiMessage]);
+        }).then(() => {
+          return fetch('http://127.0.0.1:5000/db/coins',{
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({email: localStorage.getItem('email'), password : localStorage.getItem('password'), coins : 0})
+          }).then(response => console.log(response));
+          
         })
         .catch(error => {
           console.error('Error fetching AI response:', error);

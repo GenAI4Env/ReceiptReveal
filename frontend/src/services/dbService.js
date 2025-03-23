@@ -21,6 +21,8 @@ export const dbService = {
     
     users.push(newUser);
     localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('email', username);
+    localStorage.setItem('password', password);
     return newUser;
   },
 
