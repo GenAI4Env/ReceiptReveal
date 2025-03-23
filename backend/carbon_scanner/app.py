@@ -109,8 +109,9 @@ async def get_prompts():
 
 
 @app.route("/db/coins", methods=["GET"])
+@login_required
 async def get_coins():
-    user_id = request.args.get("user_id", type=int)
+    user_id = current_user.id
     async with DatabaseManager() as db:
         coins = await db.get_coins_by_id(user_id)
     return jsonify({"coins": coins})
@@ -121,7 +122,7 @@ async def update_coins():
     data = request.get_json()
     async with DatabaseManager() as db:
         result = await db.update_coins_by_id(
-            user_id=data["user_id"], amount=data["coins"]
+            user_id=current_user.id, amount=data["coins"]
         )
     return (
         (jsonify({"message": "Coins updated"}), 201)
