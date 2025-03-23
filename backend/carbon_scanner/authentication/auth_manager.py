@@ -16,7 +16,6 @@ class User(UserMixin):
     def __init__(self, user_id: str, email: str, **kwargs: Any) -> None:
         self.id: str = user_id
         self.email: str = email
-        self.is_active: bool = kwargs.get("is_active", True)
         self.is_authenticated: bool = kwargs.get("is_authenticated", True)
         self.created_at: datetime = kwargs.get("created_at", datetime.now())
         self.last_login: Optional[Union[str, datetime]] = kwargs.get("last_login", None)
@@ -88,7 +87,6 @@ class AuthManager:
                     return User(
                         user_id=str(user_data["id"]),
                         email=user_data["email"],
-                        is_active=user_data["is_active"],
                         created_at=user_data["created_at"],
                         last_login=user_data["last_login"],
                     )
@@ -125,7 +123,6 @@ class AuthManager:
             "password_hash": hashed_pw,
             "password_salt": salt,
             "created_at": datetime.now(),
-            "is_active": True,
             **kwargs,
         }
 
@@ -171,7 +168,6 @@ class AuthManager:
         user = User(
             user_id=user_data["id"],
             email=user_data["email"],
-            is_active=user_data.get("is_active", True),
             created_at=user_data.get("created_at"),
             last_login=datetime.now(),
             profile=user_data.get("profile", {}),

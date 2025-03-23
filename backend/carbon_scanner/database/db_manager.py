@@ -56,7 +56,6 @@ class DatabaseManager:
                 password_hash TEXT,
                 password_salt TEXT,
                 created_at TEXT,
-                is_active INTEGER DEFAULT 1,
                 last_login TEXT,
                 coins INTEGER DEFAULT 0
             );
@@ -78,7 +77,7 @@ class DatabaseManager:
     async def get_user_by_id(self, user_id: str) -> Optional[Dict[str, Any]]:
         """Get a user by their ID."""
         cursor = await self.conn.execute(
-            "SELECT id, email, password_hash, password_salt, created_at, is_active, last_login FROM users WHERE id = ?",
+            "SELECT id, email, password_hash, password_salt, created_at, last_login FROM users WHERE id = ?",
             (user_id,),
         )
         row = await cursor.fetchone()
@@ -92,14 +91,13 @@ class DatabaseManager:
             "password_hash": row[2],
             "password_salt": row[3],
             "created_at": row[4],
-            "is_active": bool(row[5]),
-            "last_login": row[6],
+            "last_login": row[5],
         }
 
     async def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """Get a user by their email."""
         cursor = await self.conn.execute(
-            "SELECT id, email, password_hash, password_salt, created_at, is_active, last_login FROM users WHERE email = ?",
+            "SELECT id, email, password_hash, password_salt, created_at, last_login FROM users WHERE email = ?",
             (email,),
         )
         row = await cursor.fetchone()
@@ -113,19 +111,17 @@ class DatabaseManager:
             "password_hash": row[2],
             "password_salt": row[3],
             "created_at": row[4],
-            "is_active": bool(row[5]),
-            "last_login": row[6],
+            "last_login": row[5],
         }
 
     async def create_user(self, user_data: Dict[str, Any]) -> None:
         await self.conn.execute(
-            "INSERT INTO users (email, password_hash, password_salt, created_at, is_active) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO users (email, password_hash, password_salt, created_at) VALUES (?, ?, ?, ?)",
             (
                 user_data["email"],
                 user_data["password_hash"],
                 user_data["password_salt"],
                 str(user_data["created_at"]),
-                user_data.get("is_active", 1),  # Default to active (1)
             ),
         )
         await self.conn.commit()
