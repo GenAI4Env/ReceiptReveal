@@ -21,6 +21,7 @@ os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 # Initialize database manager
 db_manager = DatabaseManager()
+db_manager.init_app(app)
 
 # Define allowed file extensions
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
